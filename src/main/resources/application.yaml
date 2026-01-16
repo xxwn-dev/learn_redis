@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    # 도커 compose.yaml에서 설정한 DB 정보를 여기에 적습니다.
+    url: jdbc:mysql://localhost:3306/ticket_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: password # compose.yaml의 MYSQL_ROOT_PASSWORD와 동일하게!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update # 엔티티를 보고 테이블을 자동으로 생성/수정해줍니다.
+    show-sql: true     # 실행되는 SQL을 콘솔에 보여줍니다.
+    properties:
+      hibernate:
+        format_sql: true # SQL을 보기 좋게 정렬합니다.
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
