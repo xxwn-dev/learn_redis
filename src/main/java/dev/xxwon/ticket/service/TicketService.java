@@ -1,9 +1,11 @@
 package dev.xxwon.ticket.service;
 
+import dev.xxwon.ticket.domain.OrderRepository;
 import dev.xxwon.ticket.domain.Ticket;
 import dev.xxwon.ticket.domain.TicketRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TicketService {
 
-    private final TicketRepository ticketRepository;
+    private final TicketRepository ticketRepository;    //DB 저장용
 
     //프로젝트가 시작 될 때 테스트용 티켓 100개 자동 생성
     @PostConstruct
