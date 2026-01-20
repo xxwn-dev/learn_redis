@@ -1,11 +1,14 @@
 package dev.xxwon.ticket;
 
+import dev.xxwon.ticket.config.AsyncConfig;
 import dev.xxwon.ticket.domain.OrderRepository;
+import dev.xxwon.ticket.domain.TicketRepository;
 import dev.xxwon.ticket.service.RedisTicketService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.concurrent.Executors;
@@ -16,6 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
+@Import(AsyncConfig.class)
 public class RedisTicketServiceTest {
 
     @Autowired
@@ -23,6 +27,8 @@ public class RedisTicketServiceTest {
 
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private TicketRepository ticketRepository;
 
     @Test
     @DisplayName("Redis를 이용해 100 동시 티켓 구매 테스트")
@@ -48,13 +54,11 @@ public class RedisTicketServiceTest {
                 });
             }
             latch.await();
+            Thread.sleep(3000);
         }
-//        String remainCount = redisTemplate.opsForValue().get(ticketKey);
-//        System.out.println("Remaining tickets in Redis: " + remainCount);
         long savedOrderCount = orderRepository.count();
-        System.out.println("Total successful orders: " + savedOrderCount);
 
-//        assertThat(remainCount).isEqualTo("0");
         assertThat(savedOrderCount).isEqualTo((long) totalStock);
+        assertThat(ticketRepository.findById(1L).get().getAvailableQuantity()).isEqualTo(0);
     }
 }

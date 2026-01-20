@@ -17,10 +17,10 @@ public class Order {
     private Long id;
 
     private Long userId;
-    private String ticketId;
+    private Long ticketId;
     private LocalDateTime createdAt;
 
-    public Order(Long userId, String ticketId) {
+    public Order(Long userId, Long ticketId) {
         this.userId = userId;
         this.ticketId = ticketId;
         this.createdAt = LocalDateTime.now();

@@ -12,6 +12,7 @@ public class RedisTicketService {
 
     private final StringRedisTemplate redisTemplate;
     private final OrderRepository orderRepository;
+    private final OrderAsyncService orderAsyncService;
 
     //티켓 수량 초기화
     public void setTicketCount(String key, Long count) {
@@ -28,9 +29,9 @@ public class RedisTicketService {
             throw new IllegalStateException("Tickets are sold out");
         }
 
-        Order order = new Order(userId, key);
-        Order savedOrder = orderRepository.save(order);
+        Long ticketId = Long.parseLong(key.split(":")[1]);
+        orderAsyncService.processOrder(userId, ticketId);
 
-        return savedOrder.getId();
+        return remainingTickets;
     }
 }
