@@ -35,9 +35,10 @@ public class TicketServiceTest {
 
             //when
             for (int i = 0; i < numberOfThreads; i++) {
+                long userId = i;
                 executorService.submit(() -> {
                     try {
-                        ticketService.purchase(1L); // Assuming ticket ID is 1
+                        ticketService.purchase(1L, userId); // Assuming ticket ID is 1
                     } finally {
                         latch.countDown();
                     }
