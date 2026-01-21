@@ -14,7 +14,7 @@ export default function () {
 
     const userId = __VU; // 가상 유저 ID를 userId로 사용
 
-    const url = `http://localhost:8080/purchase/redis/1?userId=${userId}`;
+    const url = `http://localhost:8080/purchase/v2/redis/1?userId=${userId}`;
     // 테스트할 API 주소
 
     const params = {

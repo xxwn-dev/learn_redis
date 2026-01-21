@@ -14,7 +14,7 @@ export default function () {
 
     const userId = __VU; // 가상 유저 ID를 userId로 사용
 
-    const url = `http://localhost:8080/purchase/lock/1?userId=${userId}`;
+    const url = `http://localhost:8080/purchase/v1/lock/1?userId=${userId}`;
     // 테스트할 API 주소
 
     const params = {

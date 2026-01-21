@@ -14,7 +14,7 @@ public class TicketController {
     private final RedisTicketService redisTicketService;
     private final TicketService ticketService;
 
-    @PostMapping("/purchase/lock/{ticketId}")
+    @PostMapping("/purchase/v1/lock/{ticketId}")
     public ResponseEntity<String> purchaseTicket(@PathVariable Long ticketId, @RequestParam Long userId) {
         try {
             String ticketKey = "ticket:" + ticketId;
@@ -28,7 +28,7 @@ public class TicketController {
         }
 
     }
-    @PostMapping("/purchase/redis/{ticketId}")
+    @PostMapping("/purchase/v2/redis/{ticketId}")
     public ResponseEntity<String> purchaseTicketRedis(@PathVariable Long ticketId, @RequestParam(required = false, defaultValue = "1") Long userId) {
         try {
             String ticketKey = "ticket:" + ticketId;
