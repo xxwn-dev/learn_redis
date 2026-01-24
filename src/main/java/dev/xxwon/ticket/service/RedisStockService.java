@@ -22,13 +22,10 @@ public class RedisStockService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid ticket ID"));
 
         String key = "ticket:" + ticketId;
-
         redisTemplate.opsForValue().set(key, String.valueOf(ticket.getAvailableQuantity()));
-
-        redisTemplate.delete(key+":user"); //이전 구매 기록 삭제
     }
 
-    public Long decreaseStock(String key, Long userId) {
+    public void decreaseStock(String key, Long userId) {
         String userKey = key + ":user";
         //중복 구매 방지
         Long addedCount = redisTemplate.opsForSet().add(userKey, String.valueOf(userId));
@@ -44,6 +41,15 @@ public class RedisStockService {
             redisTemplate.opsForSet().remove(userKey, String.valueOf(userId));
             throw new IllegalStateException("Ticket is sold out.");
         }
-        return remainingStock;
+//        return remainingStock;
+    }
+
+    public boolean isAlive() {
+        try {
+            String pong = redisTemplate.getConnectionFactory().getConnection().ping();
+            return "PONG".equals(pong);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
