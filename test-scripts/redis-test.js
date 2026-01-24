@@ -4,9 +4,9 @@ import { check, sleep } from 'k6';
 // 테스트 설정
 export const options = {
     stages: [
-        { duration: '2s', target: 50 },  // 2초 동안 유저를 50명까지 늘림
-        { duration: '5s', target: 50 },  // 5초 동안 50명 유지 (부하 집중)
-        { duration: '2s', target: 0 },   // 2초 동안 유저 종료
+        { duration: '1s', target: 500 },  // 1초 만에 500명으로 폭증 (순간 부하)
+        { duration: '10s', target: 500 }, // 10초 동안 500명 유지
+        { duration: '1s', target: 0 },
     ],
 };
 

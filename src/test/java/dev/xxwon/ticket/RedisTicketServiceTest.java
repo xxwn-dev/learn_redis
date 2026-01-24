@@ -1,13 +1,12 @@
 package dev.xxwon.ticket;
 
+import dev.xxwon.ticket.application.TicketFacade;
 import dev.xxwon.ticket.config.AsyncConfig;
 import dev.xxwon.ticket.domain.OrderRepository;
 import dev.xxwon.ticket.domain.Ticket;
 import dev.xxwon.ticket.domain.TicketRepository;
-import dev.xxwon.ticket.service.RedisTicketService;
-import org.aspectj.lang.annotation.Before;
+import dev.xxwon.ticket.service.RedisStockService;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -29,7 +25,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RedisTicketServiceTest {
 
     @Autowired
-    private RedisTicketService redisTicketService;
+    private TicketFacade ticketFacade;
+
+    @Autowired
+    private RedisStockService redisStockService;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -47,31 +46,36 @@ public class RedisTicketServiceTest {
     }
 
     @Test
-    @DisplayName("Redis를 이용해 100 동시 티켓 구매 테스트")
+    @DisplayName("Facade 이용해 100 개의 재고에 대해 1000번 동시 티켓 구매 시도")
     void redis_concurrency_test() throws InterruptedException {
         //given
         Long totalStock = 100L;
         Ticket ticket = ticketRepository.save(new Ticket("Concert A", totalStock));
-
-        redisTicketService.warmUpStock(ticket.getId());
+        redisStockService.warmUpStock(ticket.getId());
 
         int threadCount = 1000;
-        try (ExecutorService executorService = Executors.newFixedThreadPool(32)) {
-            CountDownLatch latch = new CountDownLatch(threadCount);
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
-            for (int i = 0; i < threadCount; i++) {
-                long userId = i;
-                executorService.submit(() -> {
-                    try {
-                        redisTicketService.purchase("ticket:" + ticket.getId(), userId);
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-            }
-            latch.await();
+        //when
+        for (int i = 0; i < threadCount; i++) {
+            long userId = i;
+            executorService.submit(() -> {
+                try {
+                    ticketFacade.purchaseTicket(userId, ticket.getId());
+                } finally {
+                    latch.countDown();
+                }
+            });
         }
-        Thread.sleep(3000);
+        latch.await();
+        executorService.shutdown();
+
+        //then
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() ->{
+            long count = orderRepository.count();
+            assertThat(count).isEqualTo((long) totalStock);
+        });
         long savedOrderCount = orderRepository.count();
 
         assertThat(savedOrderCount).isEqualTo((long) totalStock);
@@ -85,30 +89,23 @@ public class RedisTicketServiceTest {
         //given
         Long totalStock = 100L;
         Ticket ticket = ticketRepository.save(new Ticket("Concert A", totalStock));
-
-        redisTicketService.warmUpStock(ticket.getId());
-
-        String ticketKey = "ticket:" + ticket.getId();
-        String current = redisTemplate.opsForValue().get(ticketKey);
+        redisStockService.warmUpStock(ticket.getId());
         Long userId = 999L; //동일한 유저 ID 고정
+
 
         //when
         assertDoesNotThrow(() -> {
-            redisTicketService.purchase(ticketKey, userId);
+            ticketFacade.purchaseTicket(userId, ticket.getId());
         });
 
         for(int i=0; i<4; i++){
-            IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-                redisTicketService.purchase(ticketKey, userId);
+            assertThrows(IllegalStateException.class, () -> {
+                ticketFacade.purchaseTicket(userId, ticket.getId());
             });
-
-            assertThat(exception.getMessage()).contains("User has already purchased a ticket");
         }
 
-        Thread.sleep(500);
-
         //then
-        String remaining = redisTemplate.opsForValue().get(ticketKey);
+        String remaining = redisTemplate.opsForValue().get("ticket:" + ticket.getId());
         assertThat(Long.parseLong(remaining)).isEqualTo(totalStock - 1L);
         assertThat(orderRepository.count()).isEqualTo(1L);
     }

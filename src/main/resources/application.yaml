@@ -19,6 +19,23 @@ spring:
       host: localhost
       port: 6379
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    publisher-confirm-type: correlated # 메시지 발행 확인 설정
+    publisher-returns: true          # 메시지 반환 설정
+    listener:
+      simple:
+        retry:
+          enabled: true               # 재시도 활성화
+          initial-interval: 1000      # 초기 재시도 간격 (밀리초)
+          max-attempts: 3              # 최대 재시도 횟수
+          max-interval: 10000         # 최대 재시도 간격 (밀리초)
+          multiplier: 2.0              # 재시도 간격 증가 배율
+        default-requeue-rejected: false # 재시도 후에도 실패 시 메시지 재큐잉 방지
+
 logging:
   level:
     org.hibernate: DEBUG

@@ -4,9 +4,8 @@ package dev.xxwon.ticket.controller.test;
 import dev.xxwon.ticket.domain.OrderRepository;
 import dev.xxwon.ticket.domain.Ticket;
 import dev.xxwon.ticket.domain.TicketRepository;
-import dev.xxwon.ticket.service.RedisTicketService;
+import dev.xxwon.ticket.service.RedisStockService;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class TestResetController {
     private final TicketRepository ticketRepository;
-    private final RedisTicketService redisTicketService;
+    private final RedisStockService redisStockService;
     private final OrderRepository orderRepository;
 
     @PostMapping("/reset/{ticketId}")
@@ -29,9 +28,9 @@ public class TestResetController {
                 .orElseGet(() -> {
                     return ticketRepository.save(new Ticket( "Test Concert", 100L));
                 });
-        ticket.setAvailableQuantity(100L);
+        ticket.setAvailableQuantity(500L);
         // 2. Redis 재고 초기화 호출
-        redisTicketService.warmUpStock(ticketId);
+        redisStockService.warmUpStock(ticketId);
 
         // 3. 주문 내역 싹 비우기
         orderRepository.deleteAllInBatch();
