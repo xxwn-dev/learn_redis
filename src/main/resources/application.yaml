@@ -5,14 +5,23 @@ spring:
     username: root
     password: password # compose.yaml의 MYSQL_ROOT_PASSWORD와 동일하게!
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # 테스트가 끝나면 미련 없이 커넥션을 버리도록 설정
+      maximum-pool-size: 20       # 동시 처리를 위해 10보다는 크게 잡되 너무 크지 않게
+      minimum-idle: 0             # 유휴 커넥션을 유지하지 않음
+      idle-timeout: 10000         # 10초만 안 써도 커넥션 폐기
+      max-lifetime: 20000         # 커넥션 수명을 짧게 (기본 30분은 너무 김)
+      connection-timeout: 5000    # 커넥션 획득 대기는 5초만
+      leak-detection-threshold: 0 # 테스트 종료를 방해할 수 있으니 끔 (0이면 비활성)
 
   jpa:
     hibernate:
-      ddl-auto: update # 엔티티를 보고 테이블을 자동으로 생성/수정해줍니다.
+      ddl-auto: create # 엔티티를 보고 테이블을 자동으로 생성/수정해줍니다.
     show-sql: true     # 실행되는 SQL을 콘솔에 보여줍니다.
     properties:
       hibernate:
         format_sql: true # SQL을 보기 좋게 정렬합니다.
+        hibernate.query.startup_check: false
 
   data:
     redis:
@@ -24,20 +33,29 @@ spring:
     port: 5672
     username: guest
     password: guest
-    publisher-confirm-type: correlated # 메시지 발행 확인 설정
+    publisher-confirm-type: none # 메시지 발행 확인 설정
     publisher-returns: true          # 메시지 반환 설정
     listener:
       simple:
+#        force-stop: true
+        shutdown-timeout: 10
+#        concurrency: 10
+#        max-concurrency: 20
+#        prefetch: 1
+
         retry:
           enabled: true               # 재시도 활성화
           initial-interval: 1000      # 초기 재시도 간격 (밀리초)
           max-attempts: 3              # 최대 재시도 횟수
-          max-interval: 10000         # 최대 재시도 간격 (밀리초)
+          max-interval: 3000          # 최대 재시도 간격 (밀리초)
           multiplier: 2.0              # 재시도 간격 증가 배율
+
         default-requeue-rejected: false # 재시도 후에도 실패 시 메시지 재큐잉 방지
 
 logging:
   level:
-    org.hibernate: DEBUG
+    org.hibernate.HQL_FUNCTIONS: INFO
+    org.hibernate.orm.sql.ast.create: INFO
+    org.springframework.data.jpa.repository.query: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

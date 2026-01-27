@@ -1,14 +1,13 @@
 package dev.xxwon.ticket.service;
 
-import dev.xxwon.ticket.domain.Order;
-import dev.xxwon.ticket.domain.OrderRepository;
-import dev.xxwon.ticket.domain.Ticket;
-import dev.xxwon.ticket.domain.TicketRepository;
+import dev.xxwon.ticket.domain.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +41,12 @@ public class TicketService {
         ticket.decreaseAvailableQuantity();
 
         //4. 주문 저장
-        orderRepository.save(new Order(userId, ticketId));
+        orderRepository.save(Order.builder()
+                .userId(userId)
+                .ticketId(ticketId)
+                .status(OrderStatus.SUCCESS)
+                .createdAt(LocalDateTime.now())
+                .build());
     }
 }
 

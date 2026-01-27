@@ -26,7 +26,6 @@ public class TicketFacade {
     public void purchaseTicket(Long userId, Long ticketId) {
 
         String key = "ticket:" + ticketId;
-
         if(isRedisDown) {
             fallbackPurchase(userId, ticketId, "Redis is down.");
             return;
@@ -34,15 +33,14 @@ public class TicketFacade {
 
         try {
             redisStockService.decreaseStock(key, userId);
+            Long orderId = orderService.createOrderWithOutbox(userId, ticketId);
+            //orderAsyncService.sendOrderMessage(userId, ticketId, orderId);
+        } catch (IllegalStateException e) {
+            log.info("정상 종료: {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Redis is failed! Fallback to DB stock management. Error: {}", e.getMessage());
             isRedisDown = true;
+            log.error("Redis is failed! Fallback to DB stock management. Error: {}", e.getMessage());
             fallbackPurchase(userId, ticketId, e.getMessage());
-        }
-
-        if(!isRedisDown) {
-            Long orderId = orderService.createOrder(userId, ticketId);
-            orderAsyncService.sendOrderMessage(userId, ticketId, orderId);
         }
     }
 

@@ -22,6 +22,37 @@ public class AsyncConfig {
         executor.setMaxPoolSize(50);    //최대 생성 가능한 스레드 개수
         executor.setQueueCapacity(100); //작업 대기 큐의 크기
         executor.setThreadNamePrefix("TicketAsync-");   //스레드 이름 접두사 설정
+
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.setAwaitTerminationSeconds(0);
+
+        executor.setThreadFactory(r ->{
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+        });
+
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "orderRelayExecutor")
+    public Executor orderRelayExecutor(){
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(50);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("Relay-Async-");
+
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.setAwaitTerminationSeconds(0);
+
+        executor.setThreadFactory(r ->{
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+        });
+
         executor.initialize();
         return executor;
     }

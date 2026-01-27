@@ -27,7 +27,7 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.redisson:redisson-spring-boot-starter:3.37.0")
+//	implementation("org.redisson:redisson-spring-boot-starter:3.37.0")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-amqp")
 	compileOnly("org.projectlombok:lombok")
@@ -40,6 +40,8 @@ dependencies {
 	testImplementation("org.springframework.amqp:spring-rabbit-test")
 }
 
-tasks.withType<Test> {
-	useJUnitPlatform()
+tasks.test {
+    useJUnitPlatform()
+    forkEvery = 1
+    maxHeapSize = "1024m"
 }
